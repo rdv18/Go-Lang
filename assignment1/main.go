@@ -13,20 +13,18 @@ import (
 )
 
 func main() {
-
 	cmd := &cobra.Command{
 		Use:          "imgdl",
 		Short:        "Image Downloader",
 		SilenceUsage: true,
 	}
-
-	cmd.AddCommand(getVersion(), getFileFromUrl())
+	cmd.AddCommand(initialV(), fetchURL())
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func getVersion() *cobra.Command {
+func initialV() *cobra.Command {
 	return &cobra.Command{
 		Use:     "version",
 		Short:   "Get the current version number of imgdl",
@@ -38,8 +36,7 @@ func getVersion() *cobra.Command {
 	}
 }
 
-func getFileFromUrl() *cobra.Command {
-
+func fetchURL() *cobra.Command {
 	return &cobra.Command{
 		Use:     "get",
 		Aliases: []string{"down", "download", "grap"},
@@ -59,11 +56,7 @@ func getFileFromUrl() *cobra.Command {
 			r, _ := regexp.Compile("[a-zA-Z0-9/_.:-]+.(jpg|png)")
 
 			arr := r.FindAllString(string(body), -1)
-
-			cmd.Println(len(arr))
-
 			for i := 0; i < len(arr); i++ {
-
 				if strings.HasPrefix(arr[i], "//") {
 					arr[i] = "https:" + arr[i]
 				}
@@ -71,30 +64,25 @@ func getFileFromUrl() *cobra.Command {
 					arr[i] = args[0] + arr[i]
 				}
 				fileName := filepath.Base(arr[i])
-
-				if err := DownloadFile(fileName, arr[i]); err != nil {
+				if err := imagedownload(fileName, arr[i]); err != nil {
 					panic(err)
 				}
-
 				cmd.Println("downloaded image : ", arr[i])
-
 			}
-
 			return nil
 		},
 	}
 }
 
-func DownloadFile(filepath string, url string) error {
+func imagedownload(filepath string, url string) error {
 
-	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create("saved_images")
+	out, err := os.Create("images/" + filepath)
 	if err != nil {
 		return err
 	}
